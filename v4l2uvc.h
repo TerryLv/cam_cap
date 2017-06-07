@@ -25,6 +25,8 @@
 #ifndef __V4L2UVC_H__
 #define __V4L2UVC_H__
 
+#include <linux/videodev2.h>
+
 #define NB_BUFFER 16
 #define DHT_SIZE 420
 
@@ -71,6 +73,7 @@ int close_v4l2 (struct vdIn *vd);
 
 int v4l2GetControl (struct vdIn *vd, int control);
 int v4l2SetControl (struct vdIn *vd, int control, int value);
+int v4l2QueryControl (struct vdIn *vd, int control, struct v4l2_queryctrl *query);
 int v4l2UpControl (struct vdIn *vd, int control);
 int v4l2DownControl (struct vdIn *vd, int control);
 int v4l2ToggleControl (struct vdIn *vd, int control);

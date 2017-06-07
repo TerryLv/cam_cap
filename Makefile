@@ -8,6 +8,7 @@ WARNINGS = -Wall
 
 
 CFLAGS = -std=gnu99 -O2 -DLINUX -DVERSION=\"$(VERSION)\" $(WARNINGS)
+#CFLAGS = -O0 -g -DLINUX -DVERSION=\"$(VERSION)\" $(WARNINGS)
 CPPFLAGS = $(CFLAGS)
 
 OBJECTS= cam_cap.o v4l2uvc.o color.o utils.o

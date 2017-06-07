@@ -34,6 +34,7 @@
 #include "v4l2uvc.h"
 #include "cam_cap.h"
 #include "utils.h"
+#include "time.h"
 
 static int debug = 0;
 
@@ -384,6 +385,17 @@ static int isv4l2Control (struct vdIn *vd, int control, struct v4l2_queryctrl *q
     return -1;
 }
 
+int v4l2QueryControl (struct vdIn *vd, int control, struct v4l2_queryctrl *query)
+{
+    if (NULL == query)
+        return -1;
+
+    if (isv4l2Control (vd, control, query) < 0)
+        return -1;
+    else
+        return 0;
+}
+
 int v4l2GetControl (struct vdIn *vd, int control)
 {
     struct v4l2_queryctrl queryctrl;
@@ -414,6 +426,7 @@ int v4l2SetControl (struct vdIn *vd, int control, int value)
     if ((value >= min) && (value <= max)) {
         control_s.id = control;
         control_s.value = value;
+        usleep(4000000);
         if ((err = ioctl (vd->fd, VIDIOC_S_CTRL, &control_s)) < 0) {
             fprintf (stderr, "ioctl set control error\n");
             return -1;
@@ -501,6 +514,7 @@ int v4l2ResetControl (struct vdIn *vd, int control)
     val_def = queryctrl.default_value;
     control_s.id = control;
     control_s.value = val_def;
+    usleep(400000);
     if ((err = ioctl (vd->fd, VIDIOC_S_CTRL, &control_s)) < 0) {
         fprintf (stderr, "ioctl reset control error\n");
         return -1;
@@ -522,6 +536,7 @@ int v4l2ResetPanTilt (struct vdIn *vd, int pantilt)
     val = (unsigned char) pantilt;
     control_s.id = control;
     control_s.value = val;
+    usleep(400000);
     if ((err = ioctl (vd->fd, VIDIOC_S_CTRL, &control_s)) < 0) {
         fprintf (stderr, "ioctl reset Pan control error\n");
         return -1;

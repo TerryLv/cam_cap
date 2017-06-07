@@ -55,27 +55,27 @@ void usage (void)
     fprintf(stderr, "Usage is: uvccapture [options]\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "-v\t\tVerbose (add more v's to be more verbose)\n");
-    fprintf(stderr, "-o<filename>\tOutput filename (default: cam_cap_snap.jpg). Use img%%05d.jpg for sequential files.\n");
+    fprintf(stderr, "-o<filename>\tOutput filename prefix(default: cam_cap_snap_xxx.jpg).\n");
     fprintf(stderr, "-d<device>\tV4L2 Device (default: /dev/video1)\n");
     fprintf(stderr,
              "-x<width>\tImage Width (must be supported by device), default 1920x1080\n");
     fprintf(stderr,
              "-y<height>\tImage Height (must be supported by device), default 1920x1080\n");
     fprintf(stderr,
-             "-c<command>\tCommand to run after each image capture(executed as <command> <output_filename>)\n");
-    fprintf(stderr,
              "-j<integer>\tSkip <integer> frames before first capture\n");
     fprintf(stderr,
              "-t<integer>\tTake continuous shots with <integer> microseconds between them (0 for single shot), default is single shot\n");
     fprintf(stderr,
-             "-n<integer>\tTake <integer> shots then exit. Only applicable when delay is non-zero\n");
+             "-T\t\tTest capture speed, -n must be set with this option\n");
     fprintf(stderr,
-             "-q<percentage>\tJPEG Quality Compression Level (activates YUYV capture), default 90\n");
+             "-n<integer>\tTake <integer> shots then exit. If delay is defined, it will do capture with delay interval, Or, it will do capture continuously\n");
+    fprintf(stderr,
+             "-q<percentage>\tJPEG Quality Compression Level (activates YUYV capture), default 95\n");
     fprintf(stderr, "-r\t\tUse read instead of mmap for image capture\n");
     fprintf(stderr,
              "-w\t\tWait for capture command to finish before starting next capture\n");
     fprintf(stderr, "-m\t\tToggles capture mode to YUYV capture\n");
-    fprintf(stderr, "-f<format value>\t\tChange output format, 0-MJPEG, 1-YUYV, 2-BMP, default is BMP\n");
+    fprintf(stderr, "-f<format>\tChange output format, 0-MJPEG, 1-YUYV, 2-BMP, default is BMP\n");
     fprintf(stderr, "Camera Settings:\n");
     fprintf(stderr, "-B<integer>\tBrightness\n");
     fprintf(stderr, "-C<integer>\tContrast\n");
@@ -169,9 +169,12 @@ int32_t main (int32_t argc, char *argv[])
     int32_t delay = 0;
     int32_t skip = 0;
     int32_t quality = 95;
-    int32_t i = 0;
-    struct timeval ref_time, end_time;
+    int32_t frame_num = 0;
+    struct timeval delay_ref_time, delay_end_time;
+    struct timeval spd_tst_start_time, spd_tst_end_time;
     int32_t time_dur = 0;
+    int32_t query = 0;
+    int32_t speed_tst= 0;
 
     struct vdIn *videoIn;
     FILE *file;
@@ -212,6 +215,14 @@ int32_t main (int32_t argc, char *argv[])
 
         case 'm':
             formatIn = V4L2_PIX_FMT_YUYV;
+            break;
+
+        case 'Q':
+            query = 1;
+            break;
+
+        case 'T':
+            speed_tst = 1;
             break;
 
         case 'f':
@@ -309,16 +320,50 @@ int32_t main (int32_t argc, char *argv[])
         (videoIn, (char *) videodevice, width, height, formatIn, formatOut, grabmethod) < 0)
         exit (1);
 
-    //Reset all camera controls
-    if (verbose >= 1)
-        fprintf(stderr, "Resetting camera settings\n");
-    v4l2ResetControl (videoIn, V4L2_CID_BRIGHTNESS);
-    v4l2ResetControl (videoIn, V4L2_CID_CONTRAST);
-    v4l2ResetControl (videoIn, V4L2_CID_SATURATION);
-    v4l2ResetControl (videoIn, V4L2_CID_GAIN);
+    if (1 == query) {
+        struct v4l2_queryctrl query_ctrl;
+
+        fprintf(stderr, "Using videodevice: %s\n", videodevice);
+        fprintf(stderr, "Saving images with prefix: %s\n", outputfile_prefix);
+        fprintf(stderr, "Image size: %dx%d\n", width, height);
+        if (delay > 0)
+            fprintf(stderr, "Taking snapshot every %d microsecond\n", delay);
+        else if (0 == delay)
+            fprintf(stderr, "Taking single snapshot\n");
+        else
+            fprintf(stderr, "Invalid delay value: %d\n", delay); 
+        if (grabmethod == 1)
+            fprintf(stderr, "Taking images using mmap\n");
+        else
+            fprintf(stderr, "Taking images using read\n");
+
+        v4l2QueryControl(videoIn, V4L2_CID_BRIGHTNESS, &query_ctrl);
+        fprintf(stderr, "Brightness:\n\tDefault: %d\n\tMax: %d\n\tMin:%d\n",
+                query_ctrl.default_value,
+                query_ctrl.maximum,
+                query_ctrl.minimum);
+        v4l2QueryControl(videoIn, V4L2_CID_CONTRAST, &query_ctrl);
+        fprintf(stderr, "Contrast:\n\tDefault: %d\n\tMax: %d\n\tMin:%d\n",
+                query_ctrl.default_value,
+                query_ctrl.maximum,
+                query_ctrl.minimum);
+        v4l2QueryControl(videoIn, V4L2_CID_SATURATION, &query_ctrl);
+        fprintf(stderr, "Saturation:\n\tDefault: %d\n\tMax: %d\n\tMin:%d\n",
+                query_ctrl.default_value,
+                query_ctrl.maximum,
+                query_ctrl.minimum);
+        v4l2QueryControl(videoIn, V4L2_CID_GAIN, &query_ctrl);
+        fprintf(stderr, "Gain:\n\tDefault: %d\n\tMax: %d\n\tMin:%d\n",
+                query_ctrl.default_value,
+                query_ctrl.maximum,
+                query_ctrl.minimum);
+
+        return 0;
+    }
 
     //Setup Camera Parameters
     if (brightness != 0) {
+        v4l2ResetControl (videoIn, V4L2_CID_BRIGHTNESS);
         if (verbose >= 1)
             fprintf(stderr, "Setting camera brightness to %d\n", brightness);
         v4l2SetControl (videoIn, V4L2_CID_BRIGHTNESS, brightness);
@@ -326,7 +371,9 @@ int32_t main (int32_t argc, char *argv[])
         fprintf(stderr, "Camera brightness level is %d\n",
                  v4l2GetControl (videoIn, V4L2_CID_BRIGHTNESS));
     }
+
     if (contrast != 0) {
+        v4l2ResetControl (videoIn, V4L2_CID_CONTRAST);
         if (verbose >= 1)
             fprintf(stderr, "Setting camera contrast to %d\n", contrast);
         v4l2SetControl (videoIn, V4L2_CID_CONTRAST, contrast);
@@ -334,7 +381,9 @@ int32_t main (int32_t argc, char *argv[])
         fprintf(stderr, "Camera contrast level is %d\n",
                  v4l2GetControl (videoIn, V4L2_CID_CONTRAST));
     }
+
     if (saturation != 0) {
+        v4l2ResetControl (videoIn, V4L2_CID_SATURATION);
         if (verbose >= 1)
             fprintf(stderr, "Setting camera saturation to %d\n", saturation);
         v4l2SetControl (videoIn, V4L2_CID_SATURATION, saturation);
@@ -342,7 +391,9 @@ int32_t main (int32_t argc, char *argv[])
         fprintf(stderr, "Camera saturation level is %d\n",
                  v4l2GetControl (videoIn, V4L2_CID_SATURATION));
     }
+
     if (gain != 0) {
+        v4l2ResetControl (videoIn, V4L2_CID_GAIN);
         if (verbose >= 1)
             fprintf(stderr, "Setting camera gain to %d\n", gain);
         v4l2SetControl (videoIn, V4L2_CID_GAIN, gain);
@@ -353,10 +404,13 @@ int32_t main (int32_t argc, char *argv[])
 
     initLut();
 
-    gettimeofday(&ref_time, NULL);
+    gettimeofday(&delay_ref_time, NULL);
     while (run) {
         if (verbose >= 2)
             fprintf(stderr, "Grabbing frame\n");
+
+        if (1 == speed_tst)
+            gettimeofday(&spd_tst_start_time, NULL);
         if (uvcGrab (videoIn) < 0) {
             fprintf(stderr, "Error grabbing\n");
             close_v4l2(videoIn);
@@ -367,15 +421,14 @@ int32_t main (int32_t argc, char *argv[])
 
         if (skip > 0) { skip--; continue; }
 
-        gettimeofday(&end_time, NULL);
-        time_dur = (end_time.tv_sec - ref_time.tv_sec) * 1000000 + (end_time.tv_usec - ref_time.tv_usec);
-        if (time_dur > delay * 1000) {
+        gettimeofday(&delay_end_time, NULL);
+        time_dur = (delay_end_time.tv_sec - delay_ref_time.tv_sec) * 1000000 + (delay_end_time.tv_usec - delay_ref_time.tv_usec);
+        if ((time_dur > delay * 1000) || (frame_num < num)) {
             switch (formatOut) {
             case CAM_CAP_PIX_OUT_FMT_MJPEG:
             {
                 if (delay > 0) {
-                    sprintf(thisfile, "%s_%d", outputfile_prefix, i);
-                    i++;
+                    sprintf(thisfile, "%s_%d", outputfile_prefix, frame_num);
                     if (verbose >= 1)
                         fprintf(stderr, "Saving image to: %s\n", thisfile);
                         file = fopen (thisfile, "wb");
@@ -441,10 +494,20 @@ int32_t main (int32_t argc, char *argv[])
                 break;
             }
 
-            gettimeofday(&ref_time, NULL);
+            gettimeofday(&delay_ref_time, NULL);
         }
-        if ((delay == 0) || (num == i))
+        if (1 == speed_tst) {
+            gettimeofday(&spd_tst_end_time, NULL);
+            time_dur = (spd_tst_end_time.tv_sec - spd_tst_start_time.tv_sec) * 1000000 + (spd_tst_end_time.tv_usec - spd_tst_start_time.tv_usec);
+            fprintf(stderr, "Frame %d time consume: %dus\n", frame_num, time_dur);
+        }
+        if ((delay == 0) && (num == 0))
             break;
+        if (num == frame_num)
+            break;
+
+        frame_num++;
+
     }
     close_v4l2 (videoIn);
     free (videoIn);
