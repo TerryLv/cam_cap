@@ -1,12 +1,7 @@
 
 /*******************************************************************************
-#             uvccapture: USB UVC Video Class Snapshot Software                #
-#This package work with the Logitech UVC based webcams with the mjpeg feature  #
-#.                                                                             #
-# 	Orginally Copyright (C) 2005 2006 Laurent Pinchart &&  Michel Xhaard       #
-#       Modifications Copyright (C) 2006  Gabriel A. Devenyi                   #
-#                               (C) 2010  Alexandru Csete                      #
-#                                                                              #
+#             cam_cap: USB UVC Video Class Snapshot Software                #
+#                                                                             #
 # This program is free software; you can redistribute it and/or modify         #
 # it under the terms of the GNU General Public License as published by         #
 # the Free Software Foundation; either version 2 of the License, or            #
@@ -51,7 +46,7 @@ void sigcatch (int32_t sig)
 
 void usage (void)
 {
-    fprintf(stderr, "uvccapture version %s\n", version);
+    fprintf(stderr, "cam_cap version %s\n", version);
     fprintf(stderr, "Usage is: uvccapture [options]\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "-v\t\tVerbose (add more v's to be more verbose)\n");
