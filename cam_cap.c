@@ -159,7 +159,7 @@ int32_t main (int32_t argc, char *argv[])
     int32_t width = 1920;
     int32_t height = 1080;
     int32_t brightness = 0, contrast = 0, saturation = 0, gain = 0;
-    int32_t num = -1; /* number of images to capture */
+    int32_t num = 0; /* number of images to capture */
     int32_t verbose = 0;
     int32_t delay = 0;
     int32_t skip = 0;
