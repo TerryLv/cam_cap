@@ -159,7 +159,7 @@ int32_t main (int32_t argc, char *argv[])
     int32_t width = 1920;
     int32_t height = 1080;
     int32_t brightness = 0, contrast = 0, saturation = 0, gain = 0;
-    int32_t num = 0; /* number of images to capture */
+    int32_t num = -1; /* number of images to capture */
     int32_t verbose = 0;
     int32_t delay = 0;
     int32_t skip = 0;
@@ -496,7 +496,7 @@ int32_t main (int32_t argc, char *argv[])
             time_dur = (spd_tst_end_time.tv_sec - spd_tst_start_time.tv_sec) * 1000000 + (spd_tst_end_time.tv_usec - spd_tst_start_time.tv_usec);
             fprintf(stderr, "Frame %d time consume: %dus\n", frame_num, time_dur);
         }
-        if ((delay == 0) && (num == 0))
+        if ((delay == 0) && (num <= 0))
             break;
         if (num == frame_num)
             break;
