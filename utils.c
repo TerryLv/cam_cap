@@ -1191,7 +1191,7 @@ int32_t utils_is_huffman(unsigned char *buf)
     return 0;
 }
 
-static void utils_get_picture_name (char *picture, const char *name_prefix, int32_t fmt)
+void utils_get_picture_name (char *picture, const char *name_prefix, int32_t fmt)
 {
     char temp[80] = { 0 };
     char *myext[] = { "pnm", "jpg", "bmp" };

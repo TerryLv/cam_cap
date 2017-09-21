@@ -45,3 +45,5 @@ int utils_get_picture_yv2(const char *name_prefix, unsigned char *buf,
         int width, int height);
 int utils_get_picture_bmp(const char *name_prefix, unsigned char *buf,
         int width, int height);
+void utils_get_picture_name (char *picture, const char *name_prefix,
+        int fmt);

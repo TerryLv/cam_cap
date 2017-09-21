@@ -34,6 +34,7 @@
 #include "cam_cap.h"
 #include "utils.h"
 #include "color.h"
+#include "yuv2bmp.h"
 
 static const char version[] = VERSION;
 int32_t run = 1;
@@ -47,7 +48,7 @@ void sigcatch (int32_t sig)
 void usage (void)
 {
     fprintf(stderr, "cam_cap version %s\n", version);
-    fprintf(stderr, "Usage is: uvccapture [options]\n");
+    fprintf(stderr, "Usage is: cam_cap [options]\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "-v\t\tVerbose (add more v's to be more verbose)\n");
     fprintf(stderr, "-o<filename>\tOutput filename prefix(default: cam_cap_snap_xxx.jpg).\n");
@@ -152,12 +153,12 @@ int32_t main (int32_t argc, char *argv[])
 {
     char *videodevice = "/dev/video1";
     char *outputfile_prefix = "cam_cap_snap";
-    char  thisfile[200]; /* used as filename buffer in multi-file seq. */
-    int32_t formatIn = V4L2_PIX_FMT_MJPEG;
-    int32_t formatOut = CAM_CAP_PIX_OUT_FMT_BMP;
+    char  thisfile[200] = { 0 }; /* used as filename buffer in multi-file seq. */
+    int32_t formatIn = V4L2_PIX_FMT_YUYV;
+    int32_t formatOut = CAM_CAP_PIX_OUT_FMT_MJPEG;
     int32_t grabmethod = 1;
-    int32_t width = 1920;
-    int32_t height = 1080;
+    int32_t width = 640;
+    int32_t height = 480;
     int32_t brightness = 0, contrast = 0, saturation = 0, gain = 0;
     int32_t num = -1; /* number of images to capture */
     int32_t verbose = 0;
@@ -292,7 +293,7 @@ int32_t main (int32_t argc, char *argv[])
 
 
     /* user requrested quality activates YUYV mode */
-    if (quality != 95)
+    if (quality >= 95)
         formatIn = V4L2_PIX_FMT_YUYV;
 
     if (verbose >= 1) {
@@ -355,6 +356,11 @@ int32_t main (int32_t argc, char *argv[])
 
         return 0;
     }
+
+    v4l2ResetControl (videoIn, V4L2_CID_BRIGHTNESS);
+    v4l2ResetControl (videoIn, V4L2_CID_CONTRAST);
+    v4l2ResetControl (videoIn, V4L2_CID_SATURATION);
+    v4l2ResetControl (videoIn, V4L2_CID_GAIN);
 
     //Setup Camera Parameters
     if (brightness != 0) {
@@ -426,23 +432,21 @@ int32_t main (int32_t argc, char *argv[])
                     sprintf(thisfile, "%s_%d", outputfile_prefix, frame_num);
                     if (verbose >= 1)
                         fprintf(stderr, "Saving image to: %s\n", thisfile);
-                        file = fopen (thisfile, "wb");
                 } else {
-                    sprintf(thisfile, "%s_0", outputfile_prefix);
+                    utils_get_picture_name(thisfile, outputfile_prefix, 1);
                     if (verbose >= 1)
                         fprintf(stderr, "Saving image to: %s\n", thisfile);
-                        file = fopen (thisfile, "wb");
                 }
+                file = fopen (thisfile, "wb");
 
                 if (NULL != file) {
                     switch (videoIn->formatIn) {
                     case V4L2_PIX_FMT_YUYV:
                         compress_yuyv_to_jpeg(videoIn, file, quality);
-                        printf("Not supported yet!\n");
                         return 0;
                         break;
                     case V4L2_PIX_FMT_MJPEG:
-                        fwrite(videoIn->tmpbuffer, videoIn->buf.bytesused + DHT_SIZE, 1,
+                        fwrite(videoIn->tmpbuffer, videoIn->tmpbuf_byteused + DHT_SIZE, 1,
                                file);
                         break;
                     default:
@@ -461,6 +465,7 @@ int32_t main (int32_t argc, char *argv[])
                              videoIn->width, videoIn->height);
                     break;
                 case V4L2_PIX_FMT_MJPEG:
+                    /* Compress to mjpg */
                     utils_get_picture_mjpg(outputfile_prefix, videoIn->tmpbuffer,
                              videoIn->tmpbuf_byteused);
                     break;
@@ -474,9 +479,23 @@ int32_t main (int32_t argc, char *argv[])
             {
                 switch (videoIn->formatIn) {
                 case V4L2_PIX_FMT_YUYV:
+                {
+#if 0
+                    if (delay > 0) {
+                        sprintf(thisfile, "%s_%d", outputfile_prefix, frame_num);
+                        if (verbose >= 1)
+                            fprintf(stderr, "Saving image to: %s\n", thisfile);
+                    } else {
+                        utils_get_picture_name(thisfile, outputfile_prefix, 2);
+                        if (verbose >= 1)
+                            fprintf(stderr, "Saving image to: %s\n", thisfile);
+                    }
+#endif
+                    fprintf(stderr, "not supported yet!\n");
+                }
+                break;
                 case V4L2_PIX_FMT_MJPEG:
-                    utils_get_picture_bmp(outputfile_prefix, videoIn->framebuffer,
-                               videoIn->width, videoIn->height);
+                    fprintf(stderr, "not supported yet!\n");
                     break;
                 default:
                     fprintf(stderr, "Unrecgnized input format!\n");
