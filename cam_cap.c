@@ -34,7 +34,6 @@
 #include "cam_cap.h"
 #include "utils.h"
 #include "color.h"
-#include "yuv2bmp.h"
 
 static const char version[] = VERSION;
 int32_t run = 1;
@@ -54,9 +53,9 @@ void usage (void)
     fprintf(stderr, "-o<filename>\tOutput filename prefix(default: cam_cap_snap_xxx.jpg).\n");
     fprintf(stderr, "-d<device>\tV4L2 Device (default: /dev/video1)\n");
     fprintf(stderr,
-             "-x<width>\tImage Width (must be supported by device), default 1920x1080\n");
+             "-x<width>\tImage Width (must be supported by device), default 640x480\n");
     fprintf(stderr,
-             "-y<height>\tImage Height (must be supported by device), default 1920x1080\n");
+             "-y<height>\tImage Height (must be supported by device), default 640x480\n");
     fprintf(stderr,
              "-j<integer>\tSkip <integer> frames before first capture\n");
     fprintf(stderr,
@@ -71,7 +70,7 @@ void usage (void)
     fprintf(stderr,
              "-w\t\tWait for capture command to finish before starting next capture\n");
     fprintf(stderr, "-m\t\tToggles capture mode to YUYV capture\n");
-    fprintf(stderr, "-f<format>\tChange output format, 0-MJPEG, 1-YUYV, 2-BMP, default is BMP\n");
+    fprintf(stderr, "-f<format>\tChange output format, 0-JPEG, 1-YUYV, 2-BMP, default is JPEG\n");
     fprintf(stderr, "Camera Settings:\n");
     fprintf(stderr, "-B<integer>\tBrightness\n");
     fprintf(stderr, "-C<integer>\tContrast\n");
@@ -155,7 +154,7 @@ int32_t main (int32_t argc, char *argv[])
     char *outputfile_prefix = "cam_cap_snap";
     char  thisfile[200] = { 0 }; /* used as filename buffer in multi-file seq. */
     int32_t formatIn = V4L2_PIX_FMT_YUYV;
-    int32_t formatOut = CAM_CAP_PIX_OUT_FMT_MJPEG;
+    int32_t formatOut = CAM_CAP_PIX_OUT_FMT_JPEG;
     int32_t grabmethod = 1;
     int32_t width = 640;
     int32_t height = 480;
@@ -226,7 +225,7 @@ int32_t main (int32_t argc, char *argv[])
                 int32_t fmtOut = atoi(&argv[1][2]);
                 switch (fmtOut) {
                 case CAM_CAP_PIX_OUT_FMT_YUYV:
-                case CAM_CAP_PIX_OUT_FMT_MJPEG:
+                case CAM_CAP_PIX_OUT_FMT_JPEG:
                 case CAM_CAP_PIX_OUT_FMT_BMP:
                     formatOut = fmtOut;
                     break;
@@ -426,7 +425,7 @@ int32_t main (int32_t argc, char *argv[])
         time_dur = (delay_end_time.tv_sec - delay_ref_time.tv_sec) * 1000000 + (delay_end_time.tv_usec - delay_ref_time.tv_usec);
         if ((time_dur > delay * 1000) || (frame_num < num)) {
             switch (formatOut) {
-            case CAM_CAP_PIX_OUT_FMT_MJPEG:
+            case CAM_CAP_PIX_OUT_FMT_JPEG:
             {
                 if (delay > 0) {
                     sprintf(thisfile, "%s_%d", outputfile_prefix, frame_num);
