@@ -1246,6 +1246,28 @@ int utils_get_picture_mjpg(const char *name_prefix, unsigned char *buf, int32_t 
     return 0;		
 }
 
+int utils_get_picture_jpg(FILE *file, unsigned char *buf, int32_t size)
+{
+    unsigned char *ptdeb, *ptcur = buf;
+    int sizein;
+
+    if (file != NULL) {
+	    if(!utils_is_huffman(buf)) {
+	        ptdeb = ptcur = buf;
+	        while (((ptcur[0] << 8) | ptcur[1]) != 0xffc0)
+                ptcur++;
+	        sizein = ptcur-ptdeb;
+	        fwrite(buf, sizein, 1, file);
+	        fwrite(dht_data, DHT_SIZE, 1, file);
+	        fwrite(ptcur, size - sizein, 1, file);
+	    } else {
+	        fwrite(ptcur, size, 1, file); /* ptcur was uninit -wsr */
+	    }
+	}
+
+    return 0;		
+}
+
 static int32_t utils_init_bmp_hdr(BITMAPFILE_t *bmp_file, uint32_t file_size, uint32_t img_width, uint32_t img_height, uint32_t img_bits)
 {
     if (!bmp_file) {

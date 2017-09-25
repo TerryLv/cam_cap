@@ -21,6 +21,11 @@
 #                                                                              #
 *******************************************************************************/
 
+#ifndef __UTILS_H__
+#define __UTILS_H__
+
+#include <stdio.h>
+
 #define ERR_NO_SOI 1
 #define ERR_NOT_8BIT 2
 #define ERR_HEIGHT_MISMATCH 3
@@ -47,3 +52,6 @@ int utils_get_picture_bmp(const char *name_prefix, unsigned char *buf,
         int width, int height);
 void utils_get_picture_name (char *picture, const char *name_prefix,
         int fmt);
+int utils_get_picture_jpg(FILE *file, unsigned char *buf, int size);
+
+#endif

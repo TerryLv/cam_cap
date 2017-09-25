@@ -296,12 +296,16 @@ int uvcGrab (struct vdIn *vd)
             printf("Ignoring empty buffer ...\n");
             return 0;
         }
-        if (CAM_CAP_PIX_OUT_FMT_MJPEG == vd->formatOut) {
+        if (CAM_CAP_PIX_OUT_FMT_JPEG == vd->formatOut) {
+            memcpy(vd->tmpbuffer, vd->mem[vd->buf.index],vd->buf.bytesused);
+#if 0
             memcpy (vd->tmpbuffer, vd->mem[vd->buf.index], HEADERFRAME1);
             memcpy (vd->tmpbuffer + HEADERFRAME1, dht_data, DHT_SIZE);
             memcpy (vd->tmpbuffer + HEADERFRAME1 + DHT_SIZE,
                     vd->mem[vd->buf.index] + HEADERFRAME1,
                     (vd->buf.bytesused - HEADERFRAME1));
+#endif
+            vd->tmpbuf_byteused = vd->buf.bytesused;
         } else {
             memcpy(vd->tmpbuffer, vd->mem[vd->buf.index], vd->buf.bytesused);
             vd->tmpbuf_byteused = vd->buf.bytesused;

@@ -153,7 +153,7 @@ int32_t main (int32_t argc, char *argv[])
     char *videodevice = "/dev/video1";
     char *outputfile_prefix = "cam_cap_snap";
     char  thisfile[200] = { 0 }; /* used as filename buffer in multi-file seq. */
-    int32_t formatIn = V4L2_PIX_FMT_YUYV;
+    int32_t formatIn = V4L2_PIX_FMT_MJPEG;
     int32_t formatOut = CAM_CAP_PIX_OUT_FMT_JPEG;
     int32_t grabmethod = 1;
     int32_t width = 640;
@@ -292,7 +292,7 @@ int32_t main (int32_t argc, char *argv[])
 
 
     /* user requrested quality activates YUYV mode */
-    if (quality >= 95)
+    if (quality > 95)
         formatIn = V4L2_PIX_FMT_YUYV;
 
     if (verbose >= 1) {
@@ -445,8 +445,11 @@ int32_t main (int32_t argc, char *argv[])
                         return 0;
                         break;
                     case V4L2_PIX_FMT_MJPEG:
+#if 0
                         fwrite(videoIn->tmpbuffer, videoIn->tmpbuf_byteused + DHT_SIZE, 1,
                                file);
+#endif
+                        utils_get_picture_jpg(file, videoIn->tmpbuffer, videoIn->tmpbuf_byteused);
                         break;
                     default:
                         fprintf(stderr, "Unrecgnized input format!\n");
