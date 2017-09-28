@@ -71,7 +71,7 @@ int init_videoIn (struct vdIn *vd, char *device, int width, int height,
 int uvcGrab (struct vdIn *vd);
 int close_v4l2 (struct vdIn *vd);
 
-int v4l2GetControl (struct vdIn *vd, int control);
+int v4l2GetControl (struct vdIn *vd, int control, int *out_val);
 int v4l2SetControl (struct vdIn *vd, int control, int value);
 int v4l2QueryControl (struct vdIn *vd, int control, struct v4l2_queryctrl *query);
 int v4l2UpControl (struct vdIn *vd, int control);

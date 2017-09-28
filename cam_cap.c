@@ -38,6 +38,29 @@
 static const char version[] = VERSION;
 int32_t run = 1;
 
+#define CAM_V4L2_PARAMS_NUM     (13)
+
+typedef struct {
+    char *param_name;
+    int  param_cid;
+} cam_v4l2_param;
+
+static cam_v4l2_param cam_v4l2_param_group[CAM_V4L2_PARAMS_NUM] = {
+    { "Brightness", V4L2_CID_BRIGHTNESS },
+    { "Contrast",   V4L2_CID_CONTRAST },
+    { "Saturation", V4L2_CID_SATURATION },
+    { "Hue",        V4L2_CID_HUE },
+    { "Sharpness",  V4L2_CID_SHARPNESS },
+    { "Gain",       V4L2_CID_GAIN },
+    { "Gamma",      V4L2_CID_GAMMA },
+    { "Exposure Auto", V4L2_CID_EXPOSURE_AUTO },
+    { "Exposure Absolute", V4L2_CID_EXPOSURE_ABSOLUTE },
+    { "White Balance", V4L2_CID_AUTO_WHITE_BALANCE },
+    { "White Balance Balance", V4L2_CID_WHITE_BALANCE_TEMPERATURE },
+    { "Focus Auto", V4L2_CID_FOCUS_AUTO },
+    { "Focus Absolute", V4L2_CID_FOCUS_ABSOLUTE }
+};
+
 void sigcatch (int32_t sig)
 {
     fprintf(stderr, "Exiting...\n");
@@ -146,6 +169,23 @@ int32_t compress_yuyv_to_jpeg (struct vdIn *vd, FILE * file, int32_t quality)
     free (line_buffer);
 
     return (0);
+}
+
+static int32_t cam_cap_print_cam_parameters(struct vdIn *vd)
+{
+    int tmp = 0;
+
+    fprintf(stderr, "Camera settings: \n");
+    for (tmp = 0; tmp < CAM_V4L2_PARAMS_NUM; ++tmp) {
+        int param_cid = cam_v4l2_param_group[tmp].param_cid;
+        int value_g = 0;
+
+        if (!v4l2GetControl(vd, param_cid, &value_g))
+            fprintf(stderr, "%s: %d\r\n", cam_v4l2_param_group[tmp].param_name, value_g);
+        else
+            fprintf(stderr, "%s: Failed!\r\n", cam_v4l2_param_group[tmp].param_name);
+    }
+    return 0;
 }
 
 int32_t main (int32_t argc, char *argv[])
@@ -356,10 +396,12 @@ int32_t main (int32_t argc, char *argv[])
         return 0;
     }
 
+#if 0
     v4l2ResetControl (videoIn, V4L2_CID_BRIGHTNESS);
     v4l2ResetControl (videoIn, V4L2_CID_CONTRAST);
     v4l2ResetControl (videoIn, V4L2_CID_SATURATION);
     v4l2ResetControl (videoIn, V4L2_CID_GAIN);
+#endif
 
     //Setup Camera Parameters
     if (brightness != 0) {
@@ -368,8 +410,9 @@ int32_t main (int32_t argc, char *argv[])
             fprintf(stderr, "Setting camera brightness to %d\n", brightness);
         v4l2SetControl (videoIn, V4L2_CID_BRIGHTNESS, brightness);
     } else if (verbose >= 1) {
-        fprintf(stderr, "Camera brightness level is %d\n",
-                 v4l2GetControl (videoIn, V4L2_CID_BRIGHTNESS));
+        int tmp = 0;
+        v4l2GetControl (videoIn, V4L2_CID_BRIGHTNESS, &tmp);
+        fprintf(stderr, "Camera brightness level is %d\n", tmp);
     }
 
     if (contrast != 0) {
@@ -378,8 +421,9 @@ int32_t main (int32_t argc, char *argv[])
             fprintf(stderr, "Setting camera contrast to %d\n", contrast);
         v4l2SetControl (videoIn, V4L2_CID_CONTRAST, contrast);
     } else if (verbose >= 1) {
-        fprintf(stderr, "Camera contrast level is %d\n",
-                 v4l2GetControl (videoIn, V4L2_CID_CONTRAST));
+        int tmp = 0;
+        v4l2GetControl (videoIn, V4L2_CID_CONTRAST, &tmp);
+        fprintf(stderr, "Camera contrast level is %d\n", tmp);
     }
 
     if (saturation != 0) {
@@ -388,8 +432,9 @@ int32_t main (int32_t argc, char *argv[])
             fprintf(stderr, "Setting camera saturation to %d\n", saturation);
         v4l2SetControl (videoIn, V4L2_CID_SATURATION, saturation);
     } else if (verbose >= 1) {
-        fprintf(stderr, "Camera saturation level is %d\n",
-                 v4l2GetControl (videoIn, V4L2_CID_SATURATION));
+        int tmp = 0;
+         v4l2GetControl (videoIn, V4L2_CID_SATURATION, &tmp);
+        fprintf(stderr, "Camera saturation level is %d\n", tmp);
     }
 
     if (gain != 0) {
@@ -398,8 +443,9 @@ int32_t main (int32_t argc, char *argv[])
             fprintf(stderr, "Setting camera gain to %d\n", gain);
         v4l2SetControl (videoIn, V4L2_CID_GAIN, gain);
     } else if (verbose >= 1) {
-        fprintf(stderr, "Camera gain level is %d\n",
-                 v4l2GetControl (videoIn, V4L2_CID_GAIN));
+        int tmp = 0;
+        v4l2GetControl (videoIn, V4L2_CID_GAIN, &tmp);
+        fprintf(stderr, "Camera gain level is %d\n", tmp);
     }
 
     initLut();
@@ -408,6 +454,12 @@ int32_t main (int32_t argc, char *argv[])
     while (run) {
         if (verbose >= 2)
             fprintf(stderr, "Grabbing frame\n");
+
+        if (verbose >= 3)
+        {
+            /* print camera parameters */ 
+            cam_cap_print_cam_parameters(videoIn);
+        }
 
         if (1 == speed_tst)
             gettimeofday(&spd_tst_start_time, NULL);
