@@ -331,6 +331,7 @@ static int isv4l2Control (struct vdIn *vd, int control, struct v4l2_queryctrl *q
 
     queryctrl->id = control;
     if ((err = ioctl (vd->fd, VIDIOC_QUERYCTRL, queryctrl)) < 0) {
+        fprintf (stderr, "ioctl querycontrol control %d \n", control);
         fprintf (stderr, "ioctl querycontrol error %d \n", errno);
     } else if (queryctrl->flags & V4L2_CTRL_FLAG_DISABLED) {
         fprintf (stderr, "control %s disabled \n", (char *) queryctrl->name);

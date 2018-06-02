@@ -190,7 +190,7 @@ static int32_t cam_cap_print_cam_parameters(struct vdIn *vd)
 
 int32_t main (int32_t argc, char *argv[])
 {
-    char *videodevice = "/dev/video1";
+    char *videodevice = "/dev/video0";
     char *outputfile_prefix = "cam_cap_snap";
     char  thisfile[200] = { 0 }; /* used as filename buffer in multi-file seq. */
     int32_t formatIn = V4L2_PIX_FMT_MJPEG;
@@ -396,12 +396,10 @@ int32_t main (int32_t argc, char *argv[])
         return 0;
     }
 
-#if 0
-    v4l2ResetControl (videoIn, V4L2_CID_BRIGHTNESS);
-    v4l2ResetControl (videoIn, V4L2_CID_CONTRAST);
-    v4l2ResetControl (videoIn, V4L2_CID_SATURATION);
-    v4l2ResetControl (videoIn, V4L2_CID_GAIN);
-#endif
+    v4l2ResetControl(videoIn, V4L2_CID_BRIGHTNESS);
+    v4l2ResetControl(videoIn, V4L2_CID_CONTRAST);
+    v4l2ResetControl(videoIn, V4L2_CID_SATURATION);
+    //v4l2ResetControl(videoIn, V4L2_CID_GAIN);
 
     //Setup Camera Parameters
     if (brightness != 0) {
@@ -437,6 +435,7 @@ int32_t main (int32_t argc, char *argv[])
         fprintf(stderr, "Camera saturation level is %d\n", tmp);
     }
 
+	/*
     if (gain != 0) {
         v4l2ResetControl (videoIn, V4L2_CID_GAIN);
         if (verbose >= 1)
@@ -447,6 +446,7 @@ int32_t main (int32_t argc, char *argv[])
         v4l2GetControl (videoIn, V4L2_CID_GAIN, &tmp);
         fprintf(stderr, "Camera gain level is %d\n", tmp);
     }
+	*/
 
     initLut();
 
